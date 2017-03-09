@@ -14,24 +14,6 @@ a:hover {
     text-decoration: underline;
 }
 
-div#links a {
-    display: block;
-    line-height: 1.3em;
-    margin: 0 0 1.5em 0;
-}
-
-@media screen and (min-width: 1000px) {
-    /* hack! to detect non-touch devices */
-    div#links a {
-        line-height: 0.8em;
-    }
-}
-
-h1 a {
-    font-weight: 300;
-    white-space: nowrap;
-}
-
 audio {
     max-width: 100%;
 }
@@ -40,7 +22,7 @@ body {
     font-family: sans-serif;
     margin: 0;
     padding: 1em;
-    word-break: break-word;
+    word-break: normal;
 }
 
 button {
@@ -70,17 +52,6 @@ button[disabled]:hover {
     background-color: #d84a38;
 }
 
-canvas {
-    background-color: #ccc;
-    max-width: 100%;
-    width: 100%;
-}
-
-code {
-    font-family: sans-serif;
-    font-weight: 400;
-}
-
 div#container {
     margin: 0 auto 0 auto;
     max-width: 40em;
@@ -94,42 +65,6 @@ div#highlight {
     padding: 0.5em 2em;
 }
 
-div#links {
-    padding: 0.5em 0 0 0;
-}
-
-h1 {
-    border-bottom: 1px solid #ccc;
-    font-family: sans-serif;
-    font-weight: 500;
-    margin: 0 0 0.8em 0;
-    padding: 0 0 0.2em 0;
-}
-
-h2 {
-    color: #444;
-    font-size: 1em;
-    font-weight: 500;
-    line-height: 1.2em;
-    margin: 0 0 0.8em 0;
-}
-
-h3 {
-    border-top: 1px solid #eee;
-    color: #666;
-    font-size: 0.9em;
-    font-weight: 500;
-    margin: 20px 0 10px 0;
-    padding: 10px 0 0 0;
-    white-space: nowrap;
-}
-
-html {
-    /* avoid annoying page width change
-    when moving from the home page */
-    overflow-y: scroll;
-}
-
 img {
     border: none;
     max-width: 100%;
@@ -137,16 +72,6 @@ img {
 
 input {
     font-family: sans-serif;
-}
-
-input[type=radio] {
-    position: relative;
-    top: -1px;
-}
-
-input[type=radio] {
-    position: relative;
-    top: -1px;
 }
 
 label {
@@ -163,45 +88,6 @@ p {
     line-height: 1.6em;
 }
 
-p#data {
-    border-top: 1px dotted #666;
-    font-family: Courier New, monospace;
-    line-height: 1.3em;
-    max-height: 1000px;
-    overflow-y: auto;
-    padding: 1em 0 0 0;
-}
-
-p.borderBelow {
-    border-bottom: 1px solid #eee;
-    padding: 0 0 20px 0;
-}
-
-section p:last-of-type {
-    margin: 0;
-}
-
-section {
-    border-bottom: 1px solid #eee;
-    margin: 0 0 30px 0;
-    padding: 0 0 20px 0;
-}
-
-section:last-of-type {
-    border-bottom: none;
-    padding: 0 0 1em 0;
-}
-
-select {
-    margin: 0 1em 1em 0;
-    position: relative;
-    top: -1px;
-}
-
-h1 span {
-    white-space: nowrap;
-}
-
 strong {
     font-weight: 500;
 }
@@ -210,115 +96,37 @@ ul {
     padding: 0 0 0 20px;
 }
 
-section p:last-of-type {
-    margin: 0;
-}
-
-section {
-    border-bottom: 1px solid #eee;
-    margin: 0 0 30px 0;
-    padding: 0 0 20px 0;
-}
-
-section:last-of-type {
-    border-bottom: none;
-    padding: 0 0 1em 0;
-}
-
-select {
-    margin: 0 1em 1em 0;
+/* The video panel */
+.camera_box {
+    width: 500px;
+    height: 450px;
+    display: block;
+    vertical-align: top;
     position: relative;
-    top: -1px;
+    overflow: auto;
 }
 
-h1 span {
-    white-space: nowrap;
-}
-
-strong {
-    font-weight: 500;
-}
-
-video {
-    background: #222;
-    margin: 0 0 20px 0;
-    width: 100%;
-}
-
-@media screen and (max-width: 650px) {
-    h1 {
-        font-size: 24px;
-    }
-}
-
-@media screen and (max-width: 550px) {
-    button:active {
-        background-color: darkRed;
-    }
-
-    h1 {
-        font-size: 22px;
-    }
-}
-
-@media screen and (max-width: 450px) {
-    h1 {
-        font-size: 20px;
-    }
-}
-
-/* Twitter button from http://codepen.io/alistairtweedie/pen/JlFnq */
-
-.custom-follow-button a {
-    position: relative;
-    display: inline-block;
-    padding: 4px 6px 6px 4px;
-    border: 1px solid #ccc;
-    font-family: 'Helvetica Neue';
-    font-size: 13px;
-    color: #333;
-    text-decoration: none;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, .5);
-    font-weight: bold;
-    background-color: #F8F8F8;
-    background-image: -moz-gradient(linear, left top, left bottom, from(#FFF), to(#DEDEDE));
-    background-image: -moz-linear-gradient(top, #FFF, #DEDEDE);
-    background-image: -o-linear-gradient(top, #FFF, #DEDEDE);
-    background-image: -ms-linear-gradient(top, #FFF, #DEDEDE);
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
-    cursor: pointer;
-    overflow: hidden;
-}
-
-.custom-follow-button a:hover {
-    border-color: #BBB;
-    background-color: #F8F8F8;
-    background-image: -webkit-gradient(linear, left top, left bottom, from(#F8F8F8), to(#D9D9D9));
-    background-image: -moz-linear-gradient(top, #F8F8F8, #D9D9D9);
-    background-image: -o-linear-gradient(top, #F8F8F8, #D9D9D9);
-    background-image: -ms-linear-gradient(top, #F8F8F8, #D9D9D9);
-    background-image: linear-gradient(top, #F8F8F8, #D9D9D9);
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-}
-
-.custom-follow-button a .btn-icon {
+/* The main incoming video box */
+#remote_video {
+    border: 1px solid black;
+    box-shadow: 2px 2px 3px black;
+    width: 480px;
+    height: 360px;
+    left: 10px;
     position: absolute;
-    width: 22px;
-    height: 18px;
-    top: 50%;
-    left: 7px;
-    margin-top: -9px;
-    background: url('../images/twitter.ico') 1px center no-repeat;
-    background-size: 18px;
 }
 
-.custom-follow-button a .btn-text {
-    display: inline-block;
-    padding: 2px 3px 0 28px;
+/* The small "preview" view of your camera */
+#local_video {
+    width: 120px;
+    height: 90px;
+    position: fixed;
+    top: 10px;
+    left: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0 4px black;
 }
 
-/* Twitter button ends */
+#call_container, #login_container {
+    display: none;
+}
