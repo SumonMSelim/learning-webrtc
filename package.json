@@ -1,0 +1,30 @@
+{
+  "name": "learning-webrtc",
+  "version": "1.0.0",
+  "description": "Learning WebRTC",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SumonMSelim/learning-webrtc.git"
+  },
+  "keywords": [
+    "webrtc"
+  ],
+  "author": "Muhammad Sumon Molla Selim <me@sumonselim.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SumonMSelim/learning-webrtc/issues"
+  },
+  "homepage": "https://github.com/SumonMSelim/learning-webrtc#readme",
+  "dependencies": {
+    "bufferutil": "^3.0.0",
+    "utf-8-validate": "^3.0.1",
+    "ws": "^2.2.0"
+  },
+  "devDependencies": {
+    "budo": "^9.4.7"
+  }
+}
