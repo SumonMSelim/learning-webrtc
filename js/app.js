@@ -6,12 +6,13 @@ const callContainer = document.getElementById('call_container');
 
 const loginButton = document.getElementById('login_button');
 const hangupButton = document.getElementById('hangup_button');
-const usersButton = document.getElementById('users_button');
 
 const userInput = document.getElementById('user');
-
 const store = {};
+store.user = null;
+store.callee = null;
 store.myPeerConnection = null;
+store.hasAddTrack = false;
 
 const mediaConstraints = {audio: true, video: true};
 const configuration = {
@@ -23,172 +24,198 @@ const configuration = {
 window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
 loginContainer.style.display = 'block';
 
-/** create signaling server connection */
+/** create connection to signaling server **/
 const ws = new WebSocket('ws://localhost:8080');
-
-/** listen to signaling server connection */
-ws.onopen = (res) => {
-    log(`Connected to signaling server: ${JSON.stringify(res)}`);
+ws.onopen = () => {
+    log(`*** connected to WebSocket signaling server ***`);
 };
 
-/** Subscribe to signaling server and listen to message */
+/** signaling server message response handlers **/
 ws.onmessage = (message) => {
     let data = JSON.parse(message.data);
 
-    if (data.type === 'login') {
-        document.getElementById('online').innerHTML = `Online Users: ${data.payload.users.length}`;
-        let li = '';
-        data.payload.users.forEach((user) => {
-                li += '<li>' + user;
-                if (store.currentUser !== user) {
-                    li += `&nbsp;<button onclick="startCall('${user}');">Call</button>`;
-                }
-                li += '</li>';
-            }
-        );
-        document.getElementById('users_list').innerHTML = li;
-    } else {
-        if (store.currentUser === data.target) {
-            switch (data.type) {
-                case 'candidate':
-                    let candidate = new RTCIceCandidate(data.candidate);
-                    store.myPeerConnection.addIceCandidate(candidate);
-                    break;
-
-                case 'offer':
-                    /** create RTCPeerConnection object */
-                    if (store.myPeerConnection === null) {
-                        console.log(`Offer received`);
-                        store.myPeerConnection = new RTCPeerConnection(configuration);
+    log(`*** signaling server event: ${data.type} ***`);
+    switch (data.type) {
+        case 'login':
+            log(`*** signaling server event: login ***`);
+            document.getElementById('online').innerHTML = `Online Users: ${data.payload.users.length}`;
+            let li = '';
+            data.payload.users.forEach((user) => {
+                    li += '<li>' + user;
+                    if (store.user !== user) {
+                        li += `&nbsp;<button onclick="startCall('${user}');">Call</button>`;
                     }
+                    li += '</li>';
+                }
+            );
+            document.getElementById('users_list').innerHTML = li;
+            break;
 
-                    store.myPeerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
-                        console.log(`Callee remote SDP set`);
-                        return navigator.mediaDevices.getUserMedia(mediaConstraints);
-                    }).then((localStream) => {
-                        localVideo.srcObject = localStream;
-                        console.log(`Callee local stream set`);
-                        return store.myPeerConnection.addStream(localStream);
-                    }).then(() => {
-                        console.log(`Callee answer created`);
-                        return store.myPeerConnection.createAnswer();
-                    }).then((answer) => {
-                        console.log(`Callee local SDP set`);
-                        return store.myPeerConnection.setLocalDescription(answer);
-                    }).then(() => {
-                        let message = {
-                            name: store.currentUser,
-                            target: data.name,
-                            type: 'answer',
-                            sdp: store.myPeerConnection.localDescription
-                        };
-                        send(message);
-                        console.log(`Answer sent to ${data.target}`);
-                    }).catch((e) => {
-                        swal('Oops!', e.message, 'error');
-                    });
-                    break;
+        case 'offer' && data.callee === store.user:
+            log(`*** call invitation received by ${store.user} ***`);
+            createPeerConnection();
 
-                case 'answer':
-                    console.log(`Answer received`);
-                    store.myPeerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(console.log('Answer SDP set.'));
-                    break;
+            log(`*** setting remote description from peer ***`);
+            store.myPeerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
+                log(`*** accessing local media ***`);
+                return navigator.mediaDevices.getUserMedia(mediaConstraints);
+            }).then((localStream) => {
+                log(`*** local media stream obtained ***`);
+                localVideo.srcObject = localStream;
 
-                case 'hangup':
-                    closeVideoCall();
-                    break;
-            }
-        }
+                if (store.hasAddTrack) {
+                    log(`*** adding tracks ***`);
+                    localStream.getTracks().forEach(track => store.myPeerConnection.addTrack(track, localStream));
+                } else {
+                    log(`*** adding streams ***`);
+                    store.myPeerConnection.addStream(localStream);
+                }
+            }).then(() => {
+                log(`*** creating answer ***`);
+                return store.myPeerConnection.createAnswer();
+            }).then((answer) => {
+                log(`*** setting local description after creating answer ***`);
+                return store.myPeerConnection.setLocalDescription(answer);
+            }).then(() => {
+                let data = {
+                    callee: store.user,
+                    caller: data.caller,
+                    type: 'answer',
+                    sdp: store.myPeerConnection.localDescription
+                };
+                sendToServer(data);
+                log(`*** local answer sdp sent to remote peer ***`);
+            }).catch((e) => {
+                swal('Oops!', e.message, 'error');
+            });
+            break;
+
+        case 'candidate' && data.callee === store.user:
+            store.myPeerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            log(`*** added received ice candidate ***`);
+            break;
+
+        case 'answer' && data.caller === store.user:
+            log(`*** ${data.callee} has accepted the call of ${store.user} ***`);
+            store.myPeerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+            log(`*** set remote description from peer ***`);
+            break;
+
+        case 'hangup':
+            closeVideoCall();
+            break;
     }
 };
 
 /** login button click listener */
 loginButton.onclick = () => {
     if (userInput.value.length > 0) {
-        store.currentUser = userInput.value;
+        store.user = userInput.value;
     } else {
         swal('Oops!', 'Please enter a name', 'error');
     }
 
-    let data = {type: 'login', name: store.currentUser};
-    /** send data to signaling server */
-    console.log(`Login sent: ${JSON.stringify(data)}`);
-    send(data);
+    log(`*** login data sent to signaling server ***`);
+    let data = {type: 'login', name: store.user};
+    sendToServer(data);
 
     loginContainer.style.display = 'none';
     callContainer.style.display = 'block';
 
-    swal('Yay!', `Logged in as, ${store.currentUser}`, 'success');
+    swal('Yay!', `Logged in as, ${store.user}`, 'success');
 };
 
-/** logout button click listener */
+/** call button click listener **/
+function startCall(callee) {
+    store.callee = callee;
+
+    log(`*** calling started to ${callee} ***`);
+    createPeerConnection();
+
+    log(`*** accessing local media ***`);
+    navigator.mediaDevices.getUserMedia(mediaConstraints).then((localStream) => {
+        log(`*** local media stream obtained ***`);
+        localVideo.srcObject = localStream;
+
+        if (store.hasAddTrack) {
+            log(`*** adding tracks ***`);
+            localStream.getTracks().forEach(track => store.myPeerConnection.addTrack(track, localStream));
+        } else {
+            log(`*** adding streams ***`);
+            store.myPeerConnection.addStream(localStream);
+        }
+    }).catch((e) => {
+        swal('Oops!', e.message, 'error');
+    });
+}
+
+/** hangup button click listener */
 hangupButton.onclick = () => {
     closeVideoCall();
     let data = {
         target: store.target,
         type: 'hangup',
     };
-    send(data);
+    sendToServer(data);
 };
 
-function startCall(user) {
-    store.target = user;
-    /** create RTCPeerConnection object */
+/** create peer connection and handle related events **/
+function createPeerConnection() {
+    log(`*** setting up WebRTC peer connection ***`);
     store.myPeerConnection = new window.RTCPeerConnection(configuration);
 
-    navigator.mediaDevices.getUserMedia(mediaConstraints).then((localStream) => {
-        localVideo.srcObject = localStream;
-        store.myPeerConnection.addStream(localStream);
-        console.log(`Local stream set`);
-    }).catch((e) => {
-        swal('Oops!', e.message, 'error');
-    });
+    // Do we have addTrack()? If not, we will use streams instead.
+    store.hasAddTrack = (store.myPeerConnection.addTrack !== undefined);
+    /** remote stream handling **/
+    if (store.hasAddTrack) {
+        store.myPeerConnection.ontrack = (event) => {
+            log("*** ontrack event available - setting remote stream ***");
+            remoteVideo.srcObject = event.streams[0];
+            hangupButton.disabled = false;
+        };
+    } else {
+        store.myPeerConnection.onaddstream = (event) => {
+            log("*** ontrack not available, onaddstream (deprecated) used - setting remote stream ***");
+            remoteVideo.srcObject = event.stream;
+            hangupButton.disabled = false;
+        };
+    }
 
-    /** setup negotiation handling */
+    /** onnegotiation handling **/
     store.myPeerConnection.onnegotiationneeded = () => {
-        console.log(`Offer negotiation started`);
+        log("*** negotiation needed ***");
+
+        log("*** creating offer ***");
         store.myPeerConnection.createOffer().then((offer) => {
-            console.log(`Setting local SDP`);
+            log("*** creating local sdp for sending to remote ***");
             return store.myPeerConnection.setLocalDescription(offer);
         }).then(() => {
             let data = {
-                name: store.currentUser,
-                target: store.target,
+                caller: store.user,
+                callee: store.callee,
                 type: 'offer',
                 sdp: store.myPeerConnection.localDescription
             };
-            send(data);
-            console.log(`Local SDP sent to ${data.target}`);
+            sendToServer(data);
+            log("*** local offer sdp sent to remote peer ***");
         });
     };
 
-    /** setup add stream handling */
-    store.myPeerConnection.onaddstream = (event) => {
-        console.log(`Remote stream set`);
-        remoteVideo.srcObject = event.stream;
-    };
-
-    /** setup ICE handling */
+    /** onicecandidate handling **/
     store.myPeerConnection.onicecandidate = function (event) {
+        log("*** icecandidate found ***");
+
+        log("*** sending icecandidate to remote ***");
         if (event.candidate) {
             let data = {
-                target: store.target,
+                callee: store.callee,
                 type: 'candidate',
                 candidate: event.candidate
             };
-            send(data);
+            sendToServer(data);
+            log("*** icecandidate sent to remote ***");
         }
     };
-}
-
-/** helper function to send data to signaling server */
-function send(data) {
-    return ws.send(JSON.stringify(data));
-}
-
-/** helper function to log data */
-function log(data) {
-    console.log(data);
 }
 
 /** helper function to close video call */
@@ -214,5 +241,15 @@ function closeVideoCall() {
     }
 
     hangupButton.disabled = true;
-    store.target = null;
+    store.callee = null;
+}
+
+/** helper function to send data to signaling server **/
+function sendToServer(data) {
+    return ws.send(JSON.stringify(data));
+}
+
+/** helper function to log data **/
+function log(data) {
+    console.log(data);
 }
