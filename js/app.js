@@ -26,8 +26,15 @@ loginContainer.style.display = 'block';
 
 /** create connection to signaling server **/
 const ws = new WebSocket('wss://192.168.1.26:8080');
+
 ws.onopen = () => {
+    loginButton.disabled = false;
     log(`*** connected to WebSocket signaling server ***`);
+};
+
+ws.onerror = () => {
+    loginButton.disabled = true;
+    swal('Oops!', 'Connection refused to web socket!', 'error');
 };
 
 /** signaling server message response handlers **/
