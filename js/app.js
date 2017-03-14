@@ -25,7 +25,7 @@ window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConne
 loginContainer.style.display = 'block';
 
 /** create connection to signaling server **/
-const ws = new WebSocket('ws://localhost:8080');
+const ws = new WebSocket('wss://192.168.1.26:8080');
 ws.onopen = () => {
     log(`*** connected to WebSocket signaling server ***`);
 };

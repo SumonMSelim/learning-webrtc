@@ -1,8 +1,20 @@
 const port = 8080;
 const WebSocket = require('ws');
+const fs = require('fs');
+const https = require('https');
+
+const privateKey = fs.readFileSync('keys/key.pem', 'utf8');
+const certificate = fs.readFileSync('keys/cert.pem', 'utf8');
+
+const credentials = {key: privateKey, cert: certificate};
+const express = require('express');
+
+const app = express();
+const httpsServer = https.createServer(credentials, app);
+httpsServer.listen(port);
 
 const wss = new WebSocket.Server({
-    port: port
+    server: httpsServer
 });
 
 let users = [];
