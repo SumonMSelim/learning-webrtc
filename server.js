@@ -13,7 +13,7 @@ wss.on('connection', (connection) => {
         try {
             data = JSON.parse(message);
         } catch (e) {
-            console.log(" Error parsing JSON");
+            console.log(`Error parsing JSON: ${e.message}`);
             data = {};
         }
 
@@ -49,8 +49,11 @@ wss.on('connection', (connection) => {
 
             case 'hangup':
                 broadcastToClients(connection, data);
-                users = [];
+                console.log(`Hangup: ${JSON.stringify(data)}`);
                 break;
+
+            default:
+                console.log(`I don't know how you got here: ${JSON.stringify(data)}`);
         }
     });
 });
