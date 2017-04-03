@@ -208,7 +208,7 @@ function createPeerConnection() {
                     sdp: store.myPeerConnection.localDescription
                 };
                 sendToServer(data);
-                log(`*** local sdp from ${store.user} sent to ${data.callee} ***`);
+                log(`*** local sdp from ${store.user} sent to ${store.callee} ***`);
             });
         }
     };
